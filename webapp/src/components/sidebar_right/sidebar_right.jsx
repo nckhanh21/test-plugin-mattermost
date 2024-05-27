@@ -148,14 +148,14 @@ export default class SidebarRight extends React.PureComponent {
     render() {
         const style = getStyle();
         let todos = [];
-        let listHeading = 'My Todos';
+        let listHeading = 'Danh sách';
         let addButton = '';
         let inboxList = [];
 
         switch (this.state.list) {
         case MyListName:
             todos = this.props.todos || [];
-            addButton = 'Add Todo 1';
+            addButton = "Thêm gì đó";
             inboxList = this.props.inTodos || [];
             break;
         case OutListName:
@@ -252,11 +252,11 @@ export default class SidebarRight extends React.PureComponent {
                                 <MenuItem
                                     onClick={() => this.openList(MyListName)}
                                     action={() => this.openList(MyListName)}
-                                    text={'My Todos'}
+                                    text={'Danh sách 1'}
                                 />
                                 <MenuItem
                                     action={() => this.openList(OutListName)}
-                                    text={'Sent Todos'}
+                                    text={'Danh sách 2'}
                                 />
                             </Menu>
                         </MenuWrapper>

@@ -20,7 +20,7 @@ const {id: pluginId} = manifest;
 
 export default class Plugin {
     initialize(registry, store) {
-        const {toggleRHSPlugin, showRHSPlugin} = registry.registerRightHandSidebarComponent(SidebarRight, 'Todo List');
+        const {toggleRHSPlugin, showRHSPlugin} = registry.registerRightHandSidebarComponent(SidebarRight, 'Plugin của Khánh');
 
         registry.registerReducer(reducer);
         registry.registerRootComponent(Root);
@@ -44,8 +44,8 @@ export default class Plugin {
                 telemetry('channel_header_click');
                 store.dispatch(toggleRHSPlugin);
             },
-            'Todo',
-            'Open your list of Todo issues',
+            'Khánh Plugin',
+            'Mở plugin của Khánh',
         );
 
         const getFrontendListName = (backendListName) => {
@@ -78,7 +78,7 @@ export default class Plugin {
         registry.registerAppBarComponent(
             iconURL,
             () => store.dispatch(toggleRHSPlugin),
-            'Open your list of Todo issues',
+            'Mở plugin của Khánh',
         );
 
         registry.registerWebSocketEventHandler(`custom_${pluginId}_refresh`, refresh);
