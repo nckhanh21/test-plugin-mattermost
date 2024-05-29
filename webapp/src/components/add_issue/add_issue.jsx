@@ -1,10 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-import {
-    makeStyleFromTheme,
-    changeOpacity,
-} from 'mattermost-redux/utils/theme_utils';
+import { makeStyleFromTheme, changeOpacity } from 'mattermost-redux/utils/theme_utils';
 
 import TextareaAutosize from 'react-textarea-autosize';
 
@@ -14,247 +11,238 @@ import Chip from '../../widget/chip/chip';
 import AutocompleteSelector from '../user_selector/autocomplete_selector.tsx';
 import './add_issue.scss';
 import CompassIcon from '../icons/compassIcons';
-import {getProfilePicture} from '../../utils';
+import { getProfilePicture } from '../../utils';
+import { Col, DatePicker, Form, Input, Modal, notification, Popover, Row, Select, Table } from 'antd';
+import { apiRequest } from '../../api/request';
+import { apiCategory } from '../../api/category';
 
 const PostUtils = window.PostUtils;
 
-export default class AddIssue extends React.PureComponent {
-    static propTypes = {
-        visible: PropTypes.bool.isRequired,
-        message: PropTypes.string.isRequired,
-        postID: PropTypes.string.isRequired,
-        assignee: PropTypes.object,
-        closeAddBox: PropTypes.func.isRequired,
-        submit: PropTypes.func.isRequired,
-        theme: PropTypes.object.isRequired,
-        autocompleteUsers: PropTypes.func.isRequired,
-        openAssigneeModal: PropTypes.func.isRequired,
-        removeAssignee: PropTypes.func.isRequired,
-    };
+const AddIssue = (props) => {
+    const {
+        visible,
+        message: propMessage,
+        postID,
+        assignee,
+        closeAddBox,
+        submit,
+        theme,
+        autocompleteUsers,
+        openAssigneeModal,
+        removeAssignee,
+    } = props;
 
-    constructor(props) {
-        super(props);
+    const [message, setMessage] = useState(propMessage || '');
+    const [description, setDescription] = useState('');
+    const [sendTo, setSendTo] = useState(null);
+    const [attachToThread, setAttachToThread] = useState(false);
+    const [previewMarkdown, setPreviewMarkdown] = useState(false);
+    const [assigneeModal, setAssigneeModal] = useState(false);
+    const [lstCategory, setLstCategory] = useState([]);
 
-        this.state = {
-            message: props.message || '',
-            description: '',
-            sendTo: null,
-            attachToThread: false,
-            previewMarkdown: false,
-            assigneeModal: false,
-        };
-    }
+    const [formAdd] = Form.useForm();
 
-    static getDerivedStateFromProps(props, state) {
-        if (props.visible && !state.message && props.message !== state.message) {
-            return {message: props.message};
+    useEffect(() => {
+        if (visible && !message && propMessage !== message) {
+            setMessage(propMessage);
         }
-        if (!props.visible && (state.message || state.sendTo)) {
-            return {
-                message: '',
-                sendTo: null,
-                attachToThread: false,
-                previewMarkdown: false,
-            };
+        if (!visible && (message || sendTo)) {
+            setMessage('');
+            setSendTo(null);
+            setAttachToThread(false);
+            setPreviewMarkdown(false);
         }
-        return null;
-    }
+    }, [visible, propMessage, message, sendTo]);
 
-    handleAttachChange = (e) => {
-        const value = e.target.checked;
-        if (value !== this.state.attachToThread) {
-            this.setState({
-                attachToThread: value,
+    useEffect(() => {
+        getAllCategory();
+    }, []);
+
+    const getAllCategory = async () => {
+        await apiCategory.getAll()
+            .then((res) => {
+                console.log(res.data.data);
+                if (res.data.data) {
+                    setLstCategory(res.data.data);
+                }
+
+            })
+            .catch((err) => {
+                console.log(err);
             });
-        }
+    }
+    const handleAttachChange = (e) => {
+        setAttachToThread(e.target.checked);
     };
 
-    close = () => {
-        const {closeAddBox, removeAssignee} = this.props;
-        removeAssignee();
-        closeAddBox();
-    }
-
-    submit = () => {
-        const {submit, postID, assignee, closeAddBox, removeAssignee} = this.props;
-        const {message, description, attachToThread, sendTo} = this.state;
-        this.setState({
-            message: '',
-            description: '',
-        });
-
-        if (attachToThread) {
-            if (assignee) {
-                submit(message, description, assignee.username, postID);
-            } else {
-                submit(message, description, sendTo, postID);
-            }
-        } else if (assignee) {
-            submit(message, description, assignee.username);
-        } else {
-            submit(message, description);
-        }
-
+    const close = () => {
         removeAssignee();
         closeAddBox();
     };
 
-    toggleAssigneeModal = (value) => {
-        this.setState({assigneeModal: value});
-    }
+    const handleSubmit = async (values) => {
+        console.log('submit');
+        console.log(values);
+        const { title, content, createDate, priority, category } = values;
+        const newRequest = {
+            // key: (lstRequest.length + 1).toString(),
+            title,
+            content,
+            createdDate: new Date(),
+            priority: parseInt(priority),
+            categoryId: category,
+            // statusRequest: 'Đã tạo'
+        }
 
-    onKeyDown = (e) => {
+        console.log(newRequest);
+
+        await apiRequest.create(newRequest)
+            .then((res) => {
+                console.log(res.data);
+                if (res.data.message !== 'Tạo request thành công') {
+                    notification.error({
+                        message: 'Thêm mới thất bại!',
+                        description: res.data.message,
+                        duration: 3,
+                    });
+                }
+                else {
+                    notification.success({
+                        message: 'Thêm mới thành công!',
+                        description: 'Thêm mới kiến nghị thành công!',
+                        duration: 3,
+                    });
+                    formAdd.resetFields();
+                    // getAllRequest();
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+
+        formAdd.resetFields();
+    };
+
+    const toggleAssigneeModal = (value) => {
+        setAssigneeModal(value);
+    };
+
+    const onKeyDown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
-            this.submit();
+            handleSubmit();
         }
 
         if (e.key === 'Escape') {
-            this.close();
+            close();
         }
+    };
+
+    if (!visible) {
+        return null;
     }
 
-    render() {
-        const {assignee, visible, theme} = this.props;
+    const style = getStyle(theme);
 
-        if (!visible) {
-            return null;
-        }
-
-        const {message, description} = this.state;
-
-        const style = getStyle(theme);
-
-        return (
-            <div className='AddIssueBox'>
-                <div className='AddIssueBox__body'>
-                    <div className='AddIssueBox__check'/>
-                    <div className='AddIssueBox__content'>
-                        <div className='todoplugin-issue'>
-                            {this.state.previewMarkdown ? (
-                                <div
-                                    className='todoplugin-input'
-                                    style={style.markdown}
-                                >
-                                    {PostUtils.messageHtmlToComponent(
-                                        PostUtils.formatText(this.state.message),
-                                    )}
-                                </div>
-                            ) : (
-                                <React.Fragment>
-                                    <TextareaAutosize
-                                        style={style.textareaResizeMessage}
-                                        placeholder='Enter a title'
-                                        autoFocus={true}
-                                        onKeyDown={(e) => this.onKeyDown(e)}
-                                        value={message}
-                                        onChange={(e) =>
-                                            this.setState({
-                                                message: e.target.value,
-                                            })
-                                        }
-                                    />
-                                    <TextareaAutosize
-                                        style={style.textareaResizeDescription}
-                                        placeholder='Enter a description'
-                                        onKeyDown={(e) => this.onKeyDown(e)}
-                                        value={description}
-                                        onChange={(e) =>
-                                            this.setState({
-                                                description: e.target.value,
-                                            })
-                                        }
-                                    />
-                                </React.Fragment>
-                            )}
-                        </div>
-                        {this.props.postID && (
-                            <div className='todo-add-issue'>
-                                <label>
-                                    <input
-                                        type='checkbox'
-                                        checked={this.state.attachToThread}
-                                        onChange={this.handleAttachChange}
-                                    />
-                                    <b>{' Add to thread'}</b>
-                                </label>
-                                <div className='help-text'>
-                                    {
-                                        'Select to have the Todo Bot respond to the thread when the attached todo is added, modified or completed.'
-                                    }
-                                </div>
-                            </div>
-                        )}
-
-                        <div style={style.chipsContainer}>
-                            {!assignee && (
-                                <Chip
-                                    icon={<CompassIcon icon='account-outline'/>}
-                                    onClick={() => this.props.openAssigneeModal('')}
-                                >
-                                    {'Assign to…'}
-                                </Chip>
-                            )}
-                            {assignee && (
-                                <button
-                                    style={style.assigneeContainer}
-                                    onClick={() => this.props.openAssigneeModal('')}
-                                >
-                                    <img
-                                        style={style.assigneeImage}
-                                        src={getProfilePicture(assignee.id)}
-                                        alt={assignee.username}
-                                    />
-                                    <span>{assignee.username}</span>
-                                </button>
-                            )}
-                        </div>
-
-                        <FullScreenModal
-                            show={this.state.assigneeModal}
-                            onClose={() => this.toggleAssigneeModal(false)}
-                        >
-                            <AutocompleteSelector
-                                id='send_to_user'
-                                loadOptions={this.props.autocompleteUsers}
-                                onSelected={(selected) =>
-                                    this.setState({
-                                        sendTo: selected?.username,
-                                    })
-                                }
-                                label={'Send to user'}
-                                helpText={
-                                    'Select a user if you want to send this todo.'
-                                }
-                                placeholder={''}
-                                theme={theme}
-                            />
-                        </FullScreenModal>
-                    </div>
-                </div>
-                <div
-                    className='todoplugin-button-container'
-                    style={style.buttons}
+    return (
+        <Modal
+            title="Thêm kiến nghị"
+            visible={visible}
+            onOk={formAdd.submit}
+            onCancel={closeAddBox}
+            okText='Lưu'
+            cancelText='Hủy'
+        >
+            <Form
+                name="editForm"
+                layout='vertical'
+                className='form-edit'
+                form={formAdd}
+                onFinish={handleSubmit}
+            >
+                <Form.Item
+                    label="Tiêu đề"
+                    name="title"
+                    className='form-item'
+                    rules={[
+                        {
+                            required: true,
+                            message: "Vui lòng nhập tiêu đề!"
+                        }
+                    ]}
                 >
-                    <Button
-                        emphasis='tertiary'
-                        size='small'
-                        onClick={this.close}
-                    >
-                        {'Cancel'}
-                    </Button>
-                    <Button
-                        emphasis='primary'
-                        size='small'
-                        onClick={this.submit}
-                        disabled={!message}
-                    >
-                        {'Save'}
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-}
+                    <Input placeholder='Nhập tiêu đề' />
+                </Form.Item>
+
+                <Form.Item
+                    label="Nội dung"
+                    name="content"
+                    className='form-item'
+                    rules={[
+                        {
+                            required: true,
+                            message: "Vui lòng nhập nội dung!"
+                        }
+                    ]}
+                >
+                    <Input.TextArea placeholder='Nhập nội dung'
+                        autoSize={{ minRows: 5, maxRows: 500 }}
+                    />
+                </Form.Item>
+
+                <Form.Item
+                    label="Độ ưu tiên"
+                    name="priority"
+                    className='form-item'
+                    rules={[
+                        {
+                            required: true,
+                            message: "Vui lòng chọn độ ưu tiên!"
+                        }
+                    ]}
+                >
+                    <Select placeholder='Chọn độ ưu tiên'>
+                        <Select.Option value="1">1</Select.Option>
+                        <Select.Option value="2">2</Select.Option>
+                        <Select.Option value="3">3</Select.Option>
+                    </Select>
+                </Form.Item>
+
+                <Form.Item
+                    label="Lĩnh vực"
+                    name="category"
+                    className='form-item'
+                    rules={[
+                        {
+                            required: true,
+                            message: "Vui lòng chọn lĩnh vực!"
+                        }
+                    ]}
+                >
+                    <Select placeholder='Chọn lĩnh vực'>
+                        {lstCategory.map((item, index) => (
+                            <Select.Option key={index} value={item._id}>
+                                {item.description}
+                            </Select.Option>
+                        ))}
+                    </Select>
+                </Form.Item>
+            </Form>
+        </Modal>
+    );
+};
+
+AddIssue.propTypes = {
+    visible: PropTypes.bool.isRequired,
+    message: PropTypes.string.isRequired,
+    postID: PropTypes.string.isRequired,
+    assignee: PropTypes.object,
+    closeAddBox: PropTypes.func.isRequired,
+    submit: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
+    autocompleteUsers: PropTypes.func.isRequired,
+    openAssigneeModal: PropTypes.func.isRequired,
+    removeAssignee: PropTypes.func.isRequired,
+};
 
 const getStyle = makeStyleFromTheme((theme) => {
     return {
@@ -331,3 +319,5 @@ const getStyle = makeStyleFromTheme((theme) => {
         },
     };
 });
+
+export default AddIssue;
