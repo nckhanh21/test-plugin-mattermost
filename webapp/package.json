@@ -63,6 +63,7 @@
     "antd": "5.17.4",
     "axios": "1.7.2",
     "core-js": "3.6.5",
+    "dayjs": "1.11.11",
     "mattermost-redux": "5.23.0",
     "moment": "2.30.1",
     "prop-types": "15.7.2",

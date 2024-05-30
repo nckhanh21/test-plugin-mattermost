@@ -14,7 +14,7 @@ import {
 import { Button, Col, DatePicker, Form, Input, Modal, notification, Popover, Row, Select, Table } from 'antd';
 import { BsThreeDots } from "react-icons/bs";
 
-import './todo_issues.scss';
+import './todo_editor.scss';
 import TodoItem from '../todo_item';
 import Tada from '../../illustrations/tada';
 import { apiCategory } from '../../api/category';
@@ -26,7 +26,7 @@ import { apiAction } from '../../api/action';
 
 axios.defaults.withCredentials = true;
 
-function ToDoIssues(props) {
+function ToDoEditor(props) {
     const style = getStyle(props.theme);
     const { theme, siteURL, accept, complete, list, remove, bump, addVisible, issues, numberCallApi } = props;
     const [formForward] = Form.useForm(); // Form chuyển tiếp kiến nghị
@@ -36,8 +36,11 @@ function ToDoIssues(props) {
     const [isOpenModalView, setIsOpenModalView] = useState(false); // Mở modal xem chi tiết kiến nghị
     const [isOpenModalEdit, setIsOpenModalEdit] = useState(false); // Mở modal sửa kiến nghị
     const [isOpenModalForward, setIsOpenModalForward] = useState(false); // Mở modal chuyển tiếp kiến nghị
-    const [requestChoose, setRequestChoose] = useState < any > ({}); // Kiến nghị cần chuyển tiếp
+    const [requestChoose, setRequestChoose] = useState({}); // Kiến nghị cần chuyển tiếp
     const [pageSize, setPageSize] = useState(10); // Số lượng kiến nghị trên 1 trang
+    const [duplicatedKeys, setDuplicatedKeys] = useState([]);
+    const [isShowModalDuplicate, setIsShowModalDuplicate] = useState(false); // Mở modal gán trùng kiến nghị
+    const [lstDuplicateRequest, setLstDuplicateRequest] = useState([]); // Danh sách kiến nghị trùng
     const [lstCategory, setLstCategory] = useState([]); // Danh sách lĩnh vực
     const [lstUser, setLstUser] = useState([]); // Danh sách người dùng
     const [lstAction, setLstAction] = useState([]); // Danh sách hành động
@@ -75,61 +78,71 @@ function ToDoIssues(props) {
             dataIndex: 'statusRequest',
             key: 'statusRequest',
         },
+
         {
             title: 'Hành động',
             key: 'action',
             render: (text, record) => (
-                <span
-                    style={{
-                        cursor: 'pointer',
-                    }}>
+                <span style={{
+                    cursor: 'pointer',
+                }}>
                     <Popover
                         content={
                             <div className='content-action'>
-                                <div
-                                    className='content-action-item'
-                                    onClick={() => handleViewRequest(record)}>
-                                    Xem chi tiết
-                                </div>
-                                <div
-                                    className={'content-action-item ' + (diableAction(record) ? 'disabled-icon' : '')}
-                                    onClick={() => {
-                                        if (!diableAction(record)) {
-                                            handleDeleteRequest(record);
-                                        }
-                                    }}>
-                                    Xóa
-                                </div>
-                                <div
-                                    className={'content-action-item ' + (diableAction(record) ? 'disabled-icon' : '')}
-                                    onClick={() => {
-                                        if (!diableAction(record)) {
-                                            handleEditRequest(record);
-                                        }
-                                    }
-                                    }>
-                                    Sửa
-                                </div>
-                                <div
-                                    className={'content-action-item ' + (diableAction(record) ? 'disabled-icon' : '')}
-                                    onClick={() => {
-                                        if (!diableAction(record)) {
-                                            handleForward(record);
-                                        }
-
-                                    }}>
-                                    Chuyển tiếp
-                                </div>
+                                <div className='content-action-item' onClick={() => handleViewRequest(record)}>Xem chi tiết</div>
+                                <div className='content-action-item' onClick={() => handleEditRequest(record)}>Sửa</div>
+                                <div className='content-action-item' onClick={() => handleDuplicateRequest(record)}>Gán trùng</div>
+                                <div className='content-action-item' onClick={() => handleForward(record)}>Chuyển tiếp</div>
                             </div>
                         }
                         trigger="hover">
                         <BsThreeDots />
                     </Popover>
-
                 </span>
             ),
         },
-    ];
+    ]
+
+    const columnsDuplicate = [
+        {
+            title: 'STT',
+            dataIndex: 'key',
+            key: 'key',
+        },
+        {
+            title: 'Tiêu đề',
+            dataIndex: 'title',
+            key: 'title',
+        },
+        {
+            title: 'Nội dung',
+            dataIndex: 'content',
+            key: 'content',
+        },
+        {
+            title: 'Ngày tạo',
+            dataIndex: 'createDate',
+            key: 'createDate',
+        },
+        {
+            title: 'Lĩnh vực',
+            dataIndex: 'category',
+            key: 'category',
+        },
+        {
+            title: 'Tình trạng',
+            dataIndex: 'statusRequest',
+            key: 'statusRequest',
+        },
+
+        {
+            title: 'Xác nhận trùng',
+            key: 'action',
+            render: (text, record) => (
+                <Button className='button-primary' type='primary' onClick={() => handleRequestNotDuplicate(record)}>Không trùng</Button>
+            ),
+        },
+    ]
 
     useEffect(() => {
         if (isLogin) {
@@ -251,7 +264,7 @@ function ToDoIssues(props) {
                         people: item.people,
                         process: item.processes,
                     }
-                });
+                }).filter((item) => item.statusRequest === "Bien tap");
                 console.log(data);
 
                 setLstRequest(data);
@@ -268,40 +281,53 @@ function ToDoIssues(props) {
         setRequestChoose(record);
     }
 
-    // Hàm xử lý khi xóa kiến nghị
-    const handleDeleteRequest = (record) => {
+    // Hàm xử lý khi trùng kiến nghị
+    const handleDuplicateRequest = (record) => {
         console.log(record);
-        Modal.confirm({
-            title: 'Xác nhận xóa kiến nghị',
-            content: 'Bạn có chắc chắn muốn xóa kiến nghị này không?',
-            okText: 'Xác nhận',
-            cancelText: 'Hủy',
-            maskClosable: true,
-            onOk: async () => {
-                await apiRequest.delete(record.id)
-                    .then((res) => {
-                        console.log(res.data);
-                        if (res.data.message !== 'Xoa request thanh cong') {
-                            notification.error({
-                                message: 'Xóa thất bại!',
-                                description: res.data.message,
-                                duration: 3,
-                            });
-                        }
-                        else {
-                            notification.success({
-                                message: 'Xóa thành công!',
-                                description: 'Xóa kiến nghị thành công!',
-                                duration: 3,
-                            });
-                            getAllRequest();
-                        }
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                    });
-            },
-        })
+
+        // Kiểm tra nếu kiến nghị không trùng với duplicatedKeys thì không hiển thị modal và cho notification
+        if (!duplicatedKeys.includes(record.key)) {
+            notification.error({
+                message: 'Gán trùng không thành công!',
+                description: 'Kiến nghị không trùng với kiến nghị nào!',
+                duration: 3,
+            });
+            return;
+        }
+
+        setIsShowModalDuplicate(true);
+        const lst = lstRequest.filter(item => duplicatedKeys.includes(item.key));
+        setLstDuplicateRequest(lst);
+
+        // Modal.confirm({
+        //     title: 'Gán trùng kiến nghị',
+        //     content: 'Bạn có chắc chắn muốn gán trùng kiến nghị này không?',
+        //     okText: 'Gán trùng',
+        //     cancelText: 'Hủy',
+        //     onOk() {
+        //         notification.success({
+        //             message: 'Gán trùng thành công!',
+        //             description: 'Gán trùng kiến nghị thành công!',
+        //             duration: 3,
+        //         });
+        //         setDuplicatedKeys(prevKeys => [...prevKeys, record.key]);
+        //     },
+        //     onCancel() {
+        //         console.log('Cancel');
+        //     },
+        // });
+    }
+
+    const handleRequestNotDuplicate = (record) => {
+        // Xóa key của kiến nghị không trùng khỏi duplicatedKeys
+        setDuplicatedKeys(prevKeys => prevKeys.filter(key => key !== record.key));
+        setIsShowModalDuplicate(false);
+
+        notification.success({
+            message: 'Xóa trùng thành công!',
+            description: 'Xóa trùng kiến nghị thành công!',
+            duration: 3,
+        });
     }
 
     // Hàm xử lý khi chuyển tiếp kiến nghị
@@ -468,7 +494,10 @@ function ToDoIssues(props) {
     return (
         <div style={style.container}>
 
-            <Table bordered columns={columns} pagination={handlePagination} dataSource={lstRequest} scroll={{ y: 600 }} rowClassName={(record, index) => { return diableAction(record) ? 'row-inactive' : ''; }} />
+
+            <div className="table-request">
+                <Table columns={columns} dataSource={lstRequest} pagination={handlePagination} scroll={{ y: 600 }} rowClassName={(record) => duplicatedKeys.includes(record.key) ? 'duplicated-row' : ''} />
+            </div>
 
             <Modal
                 title="Xem chi tiết kiến nghị"
@@ -561,6 +590,20 @@ function ToDoIssues(props) {
                         />
                     </Form.Item>
 
+                    {/* <Form.Item
+                        label="Ngày tạo"
+                        name="createDate"
+                        className='form-item'
+                        rules={[
+                            {
+                                required: true,
+                                message: "Vui lòng chọn ngày tạo!"
+                            }
+                        ]}
+
+                    >
+                        <DatePicker style={{ width: '100%' }} format='DD/MM/YYYY' placeholder='Chọn ngày tạo' disabledDate={(current) => current && current.isAfter(dayjs())} />
+                    </Form.Item> */}
 
                     <Form.Item
                         label="Độ ưu tiên"
@@ -602,6 +645,21 @@ function ToDoIssues(props) {
                         </Select>
                     </Form.Item>
                 </Form>
+            </Modal>
+
+            {/* Modal gán trùng, trong đó sẽ hiển thị danh sách các kiến nghị trùng nhau */}
+            <Modal
+                title="Danh sách kiến nghị trùng"
+                visible={isShowModalDuplicate}
+                footer={null}
+                onCancel={() => setIsShowModalDuplicate(false)}
+                width={'100%'}
+            >
+                <div className='content-duplicate-request'>
+                    <div className='content-duplicate-request-list'>
+                        <Table columns={columnsDuplicate} dataSource={lstDuplicateRequest} pagination={false} />
+                    </div>
+                </div>
             </Modal>
 
             <Modal
@@ -678,7 +736,7 @@ function ToDoIssues(props) {
     )
 }
 
-ToDoIssues.propTypes = {
+ToDoEditor.propTypes = {
     addVisible: PropTypes.bool.isRequired,
     remove: PropTypes.func.isRequired,
     issues: PropTypes.arrayOf(PropTypes.object),
@@ -731,4 +789,4 @@ const getStyle = makeStyleFromTheme((theme) => {
     };
 });
 
-export default ToDoIssues;
+export default ToDoEditor;
