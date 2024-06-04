@@ -1,0 +1,9 @@
+.app__body {
+    .form-control {
+        border-color: rgb(204, 204, 204) !important;
+
+        &:focus {
+            border-color: rgb(63, 67, 80) !important;
+        }
+    }
+}

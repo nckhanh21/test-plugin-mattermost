@@ -1,6 +1,6 @@
 {
-    "id": "testplugin123",
-    "name": "Plugin Test",
+    "id": "plugin-xlkn",
+    "name": "Plugin Kiến Nghị",
     "description": "This plugin serves as a starting point for writing a Mattermost plugin.",
     "homepage_url": "https://github.com/mattermost/mattermost-plugin-starter-template",
     "support_url": "https://github.com/mattermost/mattermost-plugin-starter-template/issues",

@@ -27,6 +27,19 @@
             }
         }
 
+        .todolist-header__title{
+            padding-top: 4px;
+            height: 28px;
+            border-radius: 4px;
+            font-family: Metropolis, sans-serif;
+            border: 0px;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
         .todolist-header__heading {
             font-size: 16px;
             font-weight: 600;
@@ -37,6 +50,8 @@
             margin-left: 2px;
             font-size: 18px;
         }
+
+
     }
 
     .todolist-tabs {
@@ -124,4 +139,8 @@
             margin-right: 8px;
         }
     }
+}
+
+.sidebar--right__title{
+    line-height: normal !important;
 }
