@@ -281,10 +281,10 @@ function ToDoIssues(props) {
                 await apiRequest.delete(record.id)
                     .then((res) => {
                         console.log(res.data);
-                        if (res.data.message !== 'Xoa request thanh cong') {
+                        if (res.data.message !== 'Xóa request thành công') {
                             notification.error({
                                 message: 'Xóa thất bại!',
-                                description: res.data.message,
+                                description: 'Xóa kiến nghị thất bại!',
                                 duration: 3,
                             });
                         }
@@ -294,8 +294,9 @@ function ToDoIssues(props) {
                                 description: 'Xóa kiến nghị thành công!',
                                 duration: 3,
                             });
-                            getAllRequest();
                         }
+                       
+                        getAllRequest();
                     })
                     .catch((err) => {
                         console.log(err);
@@ -326,7 +327,7 @@ function ToDoIssues(props) {
         await apiRequest.forward(requestChoose.id, req)
             .then((res) => {
                 console.log(res.data);
-                if (res.data.message !== 'success') {
+                if (res.data.message !== 'Chuyển tiếp thành công') {
                     notification.error({
                         message: 'Chuyển tiếp thất bại!',
                         description: res.data.message,
@@ -393,10 +394,10 @@ function ToDoIssues(props) {
         await apiRequest.update(requestChoose.id, req)
             .then((res) => {
                 console.log(res.data);
-                if (res.data.message !== 'Cap nhap request thanh cong') {
+                if (res.data.message !== 'Cập nhật request thành công') {
                     notification.error({
                         message: 'Sửa thất bại!',
-                        description: res.data.message,
+                        description: 'Sửa kiến nghị thất bại!',
                         duration: 3,
                     });
                 }

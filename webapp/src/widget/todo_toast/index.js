@@ -5,7 +5,7 @@ import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 
 import {getTodoToast} from '../../selectors';
-import {closeTodoToast, add} from '../../actions';
+// import {closeTodoToast, add} from '../../actions';
 
 import TodoToast from './todo_toast';
 
@@ -16,8 +16,8 @@ function mapStateToProps(state) {
 }
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
-    close: closeTodoToast,
-    submit: add,
+    // close: closeTodoToast,
+    // submit: add,
 }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchToProps)(TodoToast);

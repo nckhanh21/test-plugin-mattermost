@@ -122,14 +122,14 @@ function rhsPluginAction(state = null, action) {
     }
 }
 
-function rhsState(state = '', action) {
-    switch (action.type) {
-    case UPDATE_RHS_STATE:
-        return action.state;
-    default:
-        return state;
-    }
-}
+// function rhsState(state = '', action) {
+//     switch (action.type) {
+//     case UPDATE_RHS_STATE:
+//         return action.state;
+//     default:
+//         return state;
+//     }
+// }
 
 function isRhsVisible(state = false, action) {
     switch (action.type) {
@@ -159,7 +159,7 @@ export default combineReducers({
     issues,
     inIssues,
     outIssues,
-    rhsState,
+    // rhsState,
     rhsPluginAction,
     isRhsVisible,
     isTeamSidebarHidden,

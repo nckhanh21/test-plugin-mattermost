@@ -310,7 +310,7 @@ function ToDoSynthetic(props) {
         await apiRequest.forward(requestChoose.id, req)
             .then((res) => {
                 console.log(res.data);
-                if (res.data.message !== 'success') {
+                if (res.data.message !== 'Chuyển tiếp thành công') {
                     notification.error({
                         message: 'Chuyển tiếp thất bại!',
                         description: res.data.message,
@@ -377,7 +377,7 @@ function ToDoSynthetic(props) {
         await apiRequest.update(requestChoose.id, req)
             .then((res) => {
                 console.log(res.data);
-                if (res.data.message !== 'Cap nhap request thanh cong') {
+                if (res.data.message !== 'Cập nhật request thành công') {
                     notification.error({
                         message: 'Sửa thất bại!',
                         description: res.data.message,

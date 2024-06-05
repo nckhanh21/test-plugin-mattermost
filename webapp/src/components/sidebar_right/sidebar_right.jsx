@@ -67,7 +67,7 @@ export default class SidebarRight extends React.PureComponent {
         todoToast: PropTypes.object,
         theme: PropTypes.object.isRequired,
         siteURL: PropTypes.string.isRequired,
-        rhsState: PropTypes.string,
+        // rhsState: PropTypes.string,
         actions: PropTypes.shape({
             remove: PropTypes.func.isRequired,
             complete: PropTypes.func.isRequired,
@@ -86,7 +86,8 @@ export default class SidebarRight extends React.PureComponent {
         super(props);
 
         this.state = {
-            list: props.rhsState || Home,
+            // list: props.rhsState || Home,
+            list: Home,
             showInbox: true,
             showMy: true,
             addTodo: false,
@@ -135,9 +136,9 @@ export default class SidebarRight extends React.PureComponent {
     };
 
     componentDidUpdate(prevProps) {
-        if (prevProps.rhsState !== this.props.rhsState) {
-            this.openList(this.props.rhsState);
-        }
+        // if (prevProps.rhsState !== this.props.rhsState) {
+        //     this.openList(this.props.rhsState);
+        // }
     }
 
     getInIssues() {
@@ -342,9 +343,9 @@ export default class SidebarRight extends React.PureComponent {
                                         icon={<CompassIcon icon='plus' />}
                                         size='small'
                                         onClick={() => {
-                                            this.props.actions.telemetry('rhs_add', {
-                                                list: this.state.list,
-                                            });
+                                            // this.props.actions.telemetry('rhs_add', {
+                                            //     list: this.state.list,
+                                            // });
                                             this.addTodoItem();
                                         }}
                                     >
