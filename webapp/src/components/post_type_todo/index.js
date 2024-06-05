@@ -4,7 +4,7 @@
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 
-import {remove, complete, accept, telemetry} from '../../actions';
+// import {remove, complete, accept, telemetry} from '../../actions';
 import {getSiteURL} from '../../selectors';
 
 import PostTypeTodo from './post_type_todo';
@@ -20,10 +20,10 @@ function mapStateToProps(state, ownProps) {
 function mapDispatchToProps(dispatch) {
     return {
         actions: bindActionCreators({
-            remove,
-            complete,
-            accept,
-            telemetry,
+            // remove,
+            // complete,
+            // accept,
+            // telemetry,
         }, dispatch),
     };
 }

@@ -1,0 +1,115 @@
+.main-home {
+    display: flex;
+    flex-direction: column;
+    align-items: baseline;
+    padding: 2em;
+
+    .title-main-home {
+        font-size: 20px;
+        font-weight: bold;
+
+        span {
+            margin-left: 5px;
+            font-size: 16px;
+            font-weight: normal;
+        }
+    }
+
+    .form-request,
+    .form-forward {
+        margin-top: 10px;
+        width: 100%;
+
+        .form-item label::before {
+            content: '*';
+            color: #ff4d4f;
+            padding-right: 4px;
+            font-size: 14px;
+            display: inline-block;
+            line-height: 1;
+            position: absolute;
+            right: -5px;
+        }
+
+        .form-item label .ant-form-item-required::before {
+            display: none;
+        }
+
+        .upload-file {
+            display: flex;
+            align-items: center;
+            gap: 1em;
+            margin-top: 10px;
+            background-color: #1D1D1F;
+            color: #FFFFFF;
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .form-item-btn {
+
+            .ant-form-item-control-input-content {
+                margin-top: 10px;
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+            }
+        }
+    }
+
+    .table-request {
+        width: 100%;
+
+        .ant-table-cell {
+            text-align: center;
+        }
+    }
+
+
+}
+.ant-table-cell {
+    padding: 5px !important;
+    text-align: center !important;
+}
+.content-action {
+    display: flex;
+    flex-direction: column;
+    // justify-content: flex-end;
+    gap: 10px;
+    width: 125px;
+
+    .content-action-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &:hover {
+            background-color: #f0f0f0;
+        }
+    }
+}
+
+
+
+.modal-view-request {
+    .content-view-request {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+        .content-view-request-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+
+            .content-view-request-item-label {
+                font-weight: bold;
+            }
+        }
+    }
+}

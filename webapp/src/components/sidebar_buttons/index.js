@@ -4,7 +4,7 @@
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 
-import {list, updateRhsState, telemetry} from '../../actions';
+// import {list, updateRhsState, telemetry} from '../../actions';
 
 import SidebarButtons from './sidebar_buttons.jsx';
 
@@ -20,9 +20,9 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
     return {
         actions: bindActionCreators({
-            list,
-            updateRhsState,
-            telemetry,
+            // list,
+            // updateRhsState,
+            // telemetry,
         }, dispatch),
     };
 }

@@ -4,8 +4,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Scrollbars from 'react-custom-scrollbars';
-import {Tooltip, OverlayTrigger} from 'react-bootstrap';
-
+import { Tooltip, OverlayTrigger } from 'react-bootstrap';
+// import Form from 'react-bootstrap/Form';
+// import Modal from 'react-bootstrap/Modal';
 import AddIssue from '../add_issue';
 import Button from '../../widget/buttons/button';
 import TodoToast from '../../widget/todo_toast';
@@ -15,11 +16,17 @@ import Menu from '../../widget/menu';
 import MenuItem from '../../widget/menuItem';
 import MenuWrapper from '../../widget/menuWrapper';
 
-import ToDoIssues from '../todo_issues';
-import {isKeyPressed} from '../../utils.js';
-import Constants from '../../constants';
 
+import { isKeyPressed } from '../../utils.js';
+import Constants from '../../constants';
+import { Col, DatePicker, Form, Input, Modal, notification, Popover, Row, Select, Table } from 'antd';
+import { apiRequest } from '../../api/request';
+import { apiCategory } from '../../api/category';
 import './sidebar_right.scss';
+import ToDoIssues from '../todo_issues';
+import ToDoEditor from '../todo_editor';
+import ToDoSynthetic from '../todo_synthetic';
+import ToDoUpdate from '../todo_update';
 
 export function renderView(props) {
     return (
@@ -45,9 +52,12 @@ export function renderThumbVertical(props) {
         />);
 }
 
-const MyListName = 'my';
-const OutListName = 'out';
-const InListName = 'in';
+const Home = 'home';
+const Editor = 'editor';
+const Synthetic = 'synthetic';
+const Update = 'update';
+const Approve = 'approve';
+
 
 export default class SidebarRight extends React.PureComponent {
     static propTypes = {
@@ -57,7 +67,7 @@ export default class SidebarRight extends React.PureComponent {
         todoToast: PropTypes.object,
         theme: PropTypes.object.isRequired,
         siteURL: PropTypes.string.isRequired,
-        rhsState: PropTypes.string,
+        // rhsState: PropTypes.string,
         actions: PropTypes.shape({
             remove: PropTypes.func.isRequired,
             complete: PropTypes.func.isRequired,
@@ -76,34 +86,40 @@ export default class SidebarRight extends React.PureComponent {
         super(props);
 
         this.state = {
-            list: props.rhsState || MyListName,
+            // list: props.rhsState || Home,
+            list: Home,
             showInbox: true,
             showMy: true,
             addTodo: false,
+            isOpenAddModal: false,
+            lstCategory: [],
+            numberCallApi: 0,
         };
     }
 
     openList(listName) {
         if (this.state.list !== listName) {
-            this.setState({list: listName});
+            this.setState({ list: listName });
         }
     }
 
     toggleInbox() {
-        this.props.actions.telemetry('toggle_inbox', {action: this.state.showInbox ? 'collapse' : 'expand'});
-        this.setState({showInbox: !this.state.showInbox});
+        this.props.actions.telemetry('toggle_inbox', { action: this.state.showInbox ? 'collapse' : 'expand' });
+        this.setState({ showInbox: !this.state.showInbox });
     }
 
     toggleMy() {
-        this.props.actions.telemetry('toggle_my', {action: this.state.showMy ? 'collapse' : 'expand'});
-        this.setState({showMy: !this.state.showMy});
+        this.props.actions.telemetry('toggle_my', { action: this.state.showMy ? 'collapse' : 'expand' });
+        this.setState({ showMy: !this.state.showMy });
     }
 
     componentDidMount() {
         document.addEventListener('keydown', this.handleKeypress);
-        this.props.actions.list(false, 'my');
-        this.props.actions.list(false, 'in');
-        this.props.actions.list(false, 'out');
+        this.props.actions.list(false, 'home');
+        this.props.actions.list(false, 'synthetic');
+        this.props.actions.list(false, 'editor');
+        this.props.actions.list(false, 'update');
+        this.props.actions.list(false, 'approve');
         this.props.actions.setVisible(true);
     }
 
@@ -120,9 +136,9 @@ export default class SidebarRight extends React.PureComponent {
     };
 
     componentDidUpdate(prevProps) {
-        if (prevProps.rhsState !== this.props.rhsState) {
-            this.openList(this.props.rhsState);
-        }
+        // if (prevProps.rhsState !== this.props.rhsState) {
+        //     this.openList(this.props.rhsState);
+        // }
     }
 
     getInIssues() {
@@ -139,30 +155,52 @@ export default class SidebarRight extends React.PureComponent {
 
     addTodoItem() {
         this.props.actions.openAddCard('');
+        // this.props.actions.openAssigneeModal('');
+        // this.props.setIsOpenAddModal(true);
+        // this.setState({ isOpenAddModal: true });
     }
 
     closeAddBox = () => {
         this.props.actions.closeAddCard();
+        this.setState({ numberCallApi: this.state.numberCallApi + 1 });
+
+    }
+
+    closeModal = () => {
+        this.setState({ isOpenAddModal: false });
     }
 
     render() {
         const style = getStyle();
         let todos = [];
-        let listHeading = 'Danh sách';
+        let listHeading = 'Danh sách kiến nghị';
         let addButton = '';
         let inboxList = [];
 
         switch (this.state.list) {
-        case MyListName:
-            todos = this.props.todos || [];
-            addButton = "Thêm gì đó";
-            inboxList = this.props.inTodos || [];
-            break;
-        case OutListName:
-            todos = this.props.outTodos || [];
-            listHeading = 'Sent Todos';
-            addButton = 'Request a Todo from someone';
-            break;
+            case Home:
+                todos = this.props.todos || [];
+                addButton = 'Thêm kiến nghị mới';
+                inboxList = this.props.inTodos || [];
+                break;
+            case Editor:
+                todos = this.props.outTodos || [];
+                listHeading = 'Danh sách biên tập';
+                // addButton = 'Request a Todo from someone';
+                break;
+            case Synthetic:
+                todos = this.props.todos || [];
+                listHeading = 'Danh sách tổng hợp';
+                break;
+            case Update:
+                todos = this.props.todos || [];
+                listHeading = 'Danh sách cập nhật kết quả';
+                break;
+            case Approve:
+                todos = this.props.todos || [];
+                listHeading = 'Danh sách phê duyệt';
+                break;
+
         }
 
         let inbox;
@@ -192,12 +230,16 @@ export default class SidebarRight extends React.PureComponent {
                         <ToDoIssues
                             issues={inboxList}
                             theme={this.props.theme}
-                            list={InListName}
+                            list={Synthetic}
                             remove={this.props.actions.remove}
                             complete={this.props.actions.complete}
                             accept={this.props.actions.accept}
                             bump={this.props.actions.bump}
-                        /> : ''}
+                            numberCallApi={this.state.numberCallApi}
+                        />
+                        :
+                        ''
+                    }
                 </div>
             );
         }
@@ -238,6 +280,13 @@ export default class SidebarRight extends React.PureComponent {
                     className='SidebarRight'
                 >
                     <div className='todolist-header'>
+
+                        {/* <div
+                            className='todolist-header__title'
+                        >
+                            Danh sách kiến nghị
+                        </div> */}
+
                         <MenuWrapper>
                             <button
                                 className='todolist-header__dropdown'
@@ -250,17 +299,30 @@ export default class SidebarRight extends React.PureComponent {
                             </button>
                             <Menu position='right'>
                                 <MenuItem
-                                    onClick={() => this.openList(MyListName)}
-                                    action={() => this.openList(MyListName)}
-                                    text={'Danh sách 1'}
+                                    onClick={() => this.openList(Home)}
+                                    action={() => this.openList(Home)}
+                                    text={'Danh sách kiến nghị'}
                                 />
                                 <MenuItem
-                                    action={() => this.openList(OutListName)}
-                                    text={'Danh sách 2'}
+                                    action={() => this.openList(Editor)}
+                                    text={'Danh sách biên tập'}
                                 />
+                                <MenuItem
+                                    action={() => this.openList(Synthetic)}
+                                    text={'Danh sách tổng hợp'}
+                                />
+                                <MenuItem
+                                    action={() => this.openList(Update)}
+                                    text={'Danh sách cập nhật kết quả'}
+                                />
+                                <MenuItem
+                                    action={() => this.openList(Approve)}
+                                    text={'Danh sách phê duyệt'}
+                                />
+
                             </Menu>
                         </MenuWrapper>
-                        {this.state.list === MyListName && (
+                        {this.state.list === Home && (
                             <OverlayTrigger
                                 id='addOverlay'
                                 placement={'bottom'}
@@ -278,12 +340,12 @@ export default class SidebarRight extends React.PureComponent {
                                 <div>
                                     <Button
                                         emphasis='primary'
-                                        icon={<CompassIcon icon='plus'/>}
+                                        icon={<CompassIcon icon='plus' />}
                                         size='small'
                                         onClick={() => {
-                                            this.props.actions.telemetry('rhs_add', {
-                                                list: this.state.list,
-                                            });
+                                            // this.props.actions.telemetry('rhs_add', {
+                                            //     list: this.state.list,
+                                            // });
                                             this.addTodoItem();
                                         }}
                                     >
@@ -293,27 +355,108 @@ export default class SidebarRight extends React.PureComponent {
                             </OverlayTrigger>
                         )}
                     </div>
-                    <div>
-                        {inbox}
-                        {separator}
-                        <AddIssue
-                            theme={this.props.theme}
-                            closeAddBox={this.closeAddBox}
-                        />
-                        {(inboxList.length === 0) || (this.state.showMy && todos.length > 0) ?
-                            <ToDoIssues
-                                issues={todos}
+                    {
+                        this.state.list === Home && (
+                            <div>
+                                {inbox}
+                                {separator}
+                                <AddIssue
+                                    theme={this.props.theme}
+                                    closeAddBox={this.closeAddBox}
+                                />
+                                {(inboxList.length === 0) || (this.state.showMy && todos.length > 0) ?
+                                    <ToDoIssues
+                                        issues={todos}
+                                        theme={this.props.theme}
+                                        list={this.state.list}
+                                        remove={this.props.actions.remove}
+                                        complete={this.props.actions.complete}
+                                        accept={this.props.actions.accept}
+                                        bump={this.props.actions.bump}
+                                        siteURL={this.props.siteURL}
+                                        numberCallApi={this.state.numberCallApi}
+                                    /> : ''
+                                }
+                            </div>
+                        )
+                    }
+                    {
+                        this.state.list === Editor && (
+                            <div>
+                                {inbox}
+                                {separator}
+                                <AddIssue
+                                    theme={this.props.theme}
+                                    closeAddBox={this.closeAddBox}
+                                />
+                                {(inboxList.length === 0) || (this.state.showMy && todos.length > 0) ?
+                                    <ToDoEditor
+                                        issues={todos}
+                                        theme={this.props.theme}
+                                        list={this.state.list}
+                                        remove={this.props.actions.remove}
+                                        complete={this.props.actions.complete}
+                                        accept={this.props.actions.accept}
+                                        bump={this.props.actions.bump}
+                                        siteURL={this.props.siteURL}
+                                        numberCallApi={this.state.numberCallApi}
+                                    /> : ''
+                                }
+                            </div>
+                        )
+                    }
+{
+                        this.state.list === Synthetic && (
+                            <div>
+                                {inbox}
+                                {separator}
+                                <AddIssue
+                                    theme={this.props.theme}
+                                    closeAddBox={this.closeAddBox}
+                                />
+                                {(inboxList.length === 0) || (this.state.showMy && todos.length > 0) ?
+                                    <ToDoSynthetic
+                                        issues={todos}
+                                        theme={this.props.theme}
+                                        list={this.state.list}
+                                        remove={this.props.actions.remove}
+                                        complete={this.props.actions.complete}
+                                        accept={this.props.actions.accept}
+                                        bump={this.props.actions.bump}
+                                        siteURL={this.props.siteURL}
+                                        numberCallApi={this.state.numberCallApi}
+                                    /> : ''
+                                }
+                            </div>
+                        )
+                    }
+                    {
+                     this.state.list === Update && (
+                        <div>
+                            {inbox}
+                            {separator}
+                            <AddIssue
                                 theme={this.props.theme}
-                                list={this.state.list}
-                                remove={this.props.actions.remove}
-                                complete={this.props.actions.complete}
-                                accept={this.props.actions.accept}
-                                bump={this.props.actions.bump}
-                                siteURL={this.props.siteURL}
-                            /> : ''}
-                    </div>
+                                closeAddBox={this.closeAddBox}
+                            />
+                            {(inboxList.length === 0) || (this.state.showMy && todos.length > 0) ?
+                                <ToDoUpdate
+                                    issues={todos}
+                                    theme={this.props.theme}
+                                    list={this.state.list}
+                                    remove={this.props.actions.remove}
+                                    complete={this.props.actions.complete}
+                                    accept={this.props.actions.accept}
+                                    bump={this.props.actions.bump}
+                                    siteURL={this.props.siteURL}
+                                    numberCallApi={this.state.numberCallApi}
+                                /> : ''
+                            }
+                        </div>
+                    )   
+                    }
                     {this.props.todoToast && (
-                        <TodoToast/>
+                        <TodoToast />
                     )}
                 </Scrollbars>
             </React.Fragment>
