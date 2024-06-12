@@ -98,7 +98,7 @@ func (p *Plugin) OnConfigurationChange() error {
 	}
 
 	logger := logger.New(p.API)
-	p.tracker = telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), manifest.Id, manifest.Version, "todo", telemetry.NewTrackerConfig(p.API.GetConfig()), logger)
+	p.tracker = telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), manifest.Id, manifest.Version, "book", telemetry.NewTrackerConfig(p.API.GetConfig()), logger)
 
 	return nil
 }

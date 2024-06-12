@@ -212,7 +212,7 @@ func (l *listManager) ChangeAssignment(bookID string, userID string, sendTo stri
 	}
 
 	if (list == InListKey) || (ir.ForeignBookID != "" && list == MyListKey) {
-		return "", "", errors.New("trying to change the assignment of a todo not owned")
+		return "", "", errors.New("trying to change the assignment of a book not owned")
 	}
 
 	if ir.ForeignUserID != "" {

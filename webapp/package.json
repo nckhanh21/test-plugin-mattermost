@@ -60,6 +60,7 @@
   "dependencies": {
     "@mattermost/compass-icons": "^0.1.10",
     "@types/react-select": "3.0.23",
+    "antd": "5.18.0",
     "axios": "1.7.2",
     "core-js": "3.6.5",
     "dayjs": "1.11.11",

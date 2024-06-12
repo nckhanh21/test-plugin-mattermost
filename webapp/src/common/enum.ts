@@ -1,5 +1,5 @@
 export enum API_URL {
-    HOST = "https://serverxlkn.onrender.com",
+    HOST = "https://d522-14-224-131-219.ngrok-free.app",
     GET_TOPICS_LIST = "https://crawler.deepaicare.com/api/topic",
 };
 export enum CONST {

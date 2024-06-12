@@ -82,10 +82,13 @@ func (p *Plugin) OnActivate() error {
 	}
 
 	botID, err := p.client.Bot.EnsureBot(&model.Bot{
-		Username:    "bookbot",
+		Username:    "bookbot1",
 		DisplayName: "Book Bot",
 		Description: "Created by the Book plugin.",
 	})
+
+	fmt.Println("botID: ", botID)
+
 	if err != nil {
 		return errors.Wrap(err, "failed to ensure book bot")
 	}
